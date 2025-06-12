@@ -10,24 +10,18 @@ const calculatePriorityFromContent = (text) => {
     'יש לוודא עמידה ב', 'אי עמידה עלולה', 'הפרה', 'עבירה', 'צו', 'פקודה', 'קנס', 
     'הדחת', 'ביטול רישיון', 'חוק', 'תקנות', 'חוקי', 'תקני', 'תקן', 'חוקית',
     'מחייב', 'חובה על', 'חייבים', 'מחויבים', 'נדרשים', 'חובה להבטיח',
-    'חובה לוודא', 'חובה לבדוק', 'חובה להקפיד', 'חובה להבטיח', 'חובה להבטיח',
-    'חובה להבטיח', 'חובה להבטיח', 'חובה להבטיח', 'חובה להבטיח', 'חובה להבטיח'
+    'חובה לוודא', 'חובה לבדוק', 'חובה להקפיד'
   ];
   
   const highKeywords = [
     'יש להקפיד', 'יש לוודא', 'יש לבדוק', 'יש להבטיח', 'דרוש', 'חשוב', 
     'מומלץ בחום', 'חיוני', 'מניעת', 'צמצום', 'בדיקה תקופתית', 'אישור', 
     'תעודה', 'דיווח', 'נדרש', 'חיוני', 'חשוב', 'משמעותי', 'מרכזי',
-    'עיקרי', 'בסיסי', 'יסודי', 'קריטי', 'מכריע', 'הכרחי', 'חיוני',
-    'נדרש', 'חובה', 'מחייב', 'חייב', 'מחויב', 'נדרש', 'חובה על',
-    'חייבים', 'מחויבים', 'נדרשים', 'חובה להבטיח', 'חובה לוודא',
-    'חובה לבדוק', 'חובה להקפיד', 'חובה להבטיח'
+    'עיקרי', 'בסיסי', 'יסודי', 'קריטי', 'מכריע', 'הכרחי'
   ];
   
   const mediumKeywords = [
     'מומלץ', 'רצוי', 'כדאי', 'ניתן', 'אפשרי', 'רצוי ש', 'אפשרות ל',
-    'במידת הצורך', 'בין היתר', 'כגון', 'יש לשים לב', 'מומלץ',
-    'רצוי', 'כדאי', 'ניתן', 'אפשרי', 'רצוי ש', 'אפשרות ל',
     'במידת הצורך', 'בין היתר', 'כגון', 'יש לשים לב'
   ];
 
@@ -36,42 +30,30 @@ const calculatePriorityFromContent = (text) => {
     'סיכון', 'חיטוי', 'עיקור', 'מזיקים', 'אש', 'חומרים מסוכנים',
     'כיבוי אש', 'הגשת עזרה ראשונה', 'מנדף', 'אוורור', 'קירור',
     'הקפאה', 'טמפרטורה', 'זיהום', 'חיידקים', 'נגיפים', 'חומרי ניקוי',
-    'סטריליזציה', 'מחלות', 'הדבקה', 'זיהום', 'חיידקים', 'נגיפים',
-    'חומרים מסוכנים', 'רעלים', 'חומרים רעילים', 'חומרים מסוכנים',
-    'חומרים רעילים', 'חומרים מסוכנים', 'חומרים רעילים'
+    'סטריליזציה', 'מחלות', 'הדבקה'
   ];
 
   const licensingKeywords = [
     'רישוי', 'רישיון', 'אישור', 'היתר', 'תעודה', 'רגולציה', 'תקנות',
     'חוק', 'צו', 'הרשאה', 'פקיד מוסמך', 'רשות', 'משרד', 'ממשלה',
-    'רשות מקומית', 'עירייה', 'מועצה', 'רשות מקומית', 'משרד',
-    'ממשלה', 'רשות מקומית', 'עירייה', 'מועצה'
+    'רשות מקומית', 'עירייה', 'מועצה'
   ];
 
   const infrastructureKeywords = [
     'תשתיות', 'מבנה', 'ציוד', 'מתקן', 'מערכת', 'רצפה', 'קירות', 'תקרה',
     'צנרת', 'ביוב', 'חשמל', 'מים', 'גז', 'אוורור', 'מיזוג', 'תאורה',
-    'דלתות', 'חלונות', 'שטחי עבודה', 'מטבח', 'מחסן', 'חדר קירור', 'מקפיא',
-    'מערכת חשמל', 'מערכת מים', 'מערכת ביוב', 'מערכת אוורור', 'מערכת מיזוג',
-    'מערכת תאורה', 'מערכת כיבוי אש', 'מערכת אבטחה', 'מערכת גז', 'מערכת מים',
-    'מערכת ביוב', 'מערכת אוורור', 'מערכת מיזוג', 'מערכת תאורה'
+    'דלתות', 'חלונות', 'שטחי עבודה', 'מטבח', 'מחסן', 'חדר קירור', 'מקפיא'
   ];
 
   const staffKeywords = [
     'עובדים', 'צוות', 'הכשרה', 'הדרכה', 'תעודה', 'בריאות העובדים',
     'היגיינה אישית', 'ביגוד', 'בדיקות רפואיות', 'מחלות', 'מנהל',
-    'אחראי', 'הסמכה', 'תעסוקה', 'שכר', 'ביטוח', 'בריאות', 'בטיחות',
-    'הדרכה', 'הכשרה', 'תעודה', 'רישיון', 'אישור', 'הסמכה', 'מקצוע',
-    'תפקיד', 'אחריות', 'חובות', 'זכויות', 'תנאי עבודה', 'שעות עבודה',
-    'מנוחה', 'חופשה', 'מחלה', 'תאונה', 'בריאות', 'בטיחות'
+    'אחראי', 'הסמכה', 'תעסוקה', 'שכר', 'ביטוח', 'בריאות', 'בטיחות'
   ];
 
   const environmentKeywords = [
     'סביבה', 'פסולת', 'שפכים', 'זיהום', 'מיחזור', 'ביוב', 'שמן',
-    'הדברה', 'קיימות', 'אקולוגיה', 'מים', 'אוויר', 'קרקע', 'זיהום',
-    'מחזור', 'פסולת', 'שפכים', 'ביוב', 'שמן', 'הדברה', 'קיימות',
-    'אקולוגיה', 'מים', 'אוויר', 'קרקע', 'זיהום', 'מחזור', 'פסולת',
-    'שפכים', 'ביוב', 'שמן', 'הדברה', 'קיימות', 'אקולוגיה'
+    'הדברה', 'קיימות', 'אקולוגיה', 'מים', 'אוויר', 'קרקע'
   ];
 
   // Check for critical keywords first
@@ -104,139 +86,189 @@ const calculatePriorityFromContent = (text) => {
     priority = Math.max(priority, 5); // גבוה
   }
 
-  // Additional context-based priority adjustments
-  if (textToAnalyze.includes('חוק') || textToAnalyze.includes('תקנות') || textToAnalyze.includes('צו')) {
-    priority = Math.max(priority, 8);
-  }
-  if (textToAnalyze.includes('רישיון') || textToAnalyze.includes('היתר') || textToAnalyze.includes('אישור')) {
-    priority = Math.max(priority, 9);
-  }
-  if (textToAnalyze.includes('בטיחות') || textToAnalyze.includes('בריאות') || textToAnalyze.includes('היגיינה')) {
-    priority = Math.max(priority, 8);
-  }
-
-  // Type-based priority adjustments
-  if (textToAnalyze.includes('מזון') || textToAnalyze.includes('אוכל') || textToAnalyze.includes('מאכל')) {
-    priority = Math.max(priority, 8);
-  }
-  if (textToAnalyze.includes('היגיינה') || textToAnalyze.includes('ניקיון') || textToAnalyze.includes('תברואה')) {
-    priority = Math.max(priority, 8);
-  }
-  if (textToAnalyze.includes('צוות') || textToAnalyze.includes('עובדים') || textToAnalyze.includes('הכשרה')) {
-    priority = Math.max(priority, 6);
-  }
-  if (textToAnalyze.includes('תשתיות') || textToAnalyze.includes('מבנה') || textToAnalyze.includes('ציוד')) {
-    priority = Math.max(priority, 6);
-  }
-  if (textToAnalyze.includes('רישוי') || textToAnalyze.includes('רישיון') || textToAnalyze.includes('היתר')) {
-    priority = Math.max(priority, 9);
-  }
-  if (textToAnalyze.includes('בטיחות') || textToAnalyze.includes('סיכון') || textToAnalyze.includes('סכנה')) {
-    priority = Math.max(priority, 9);
-  }
-  if (textToAnalyze.includes('סביבה') || textToAnalyze.includes('פסולת') || textToAnalyze.includes('זיהום')) {
-    priority = Math.max(priority, 5);
-  }
-
   return priority;
 };
 
 const parseContentToRequirements = (content, sectionTitle = '') => {
-  const requirements = [];
-  const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-  let currentParsedRequirement = null;
+  if (!content || typeof content !== 'string') {
+    return [];
+  }
 
-  for (const line of lines) {
-    // Check for numbered items (e.g., "1. item", "(1) item", "1.1. item", "1.1.1. item")
-    if (line.match(/^\d+(\.\d+)*\s+/) || line.match(/^\(\d+\)\s+/)) {
-      if (currentParsedRequirement) {
-        currentParsedRequirement.recommendations = generateRecommendations(currentParsedRequirement);
-        requirements.push(currentParsedRequirement);
+  const requirements = [];
+  const lines = content.split('\n');
+  let currentRequirement = null;
+  let buffer = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+
+    // בדיקה אם זו התחלה של דרישה חדשה
+    const isNewRequirement = line.match(/^(\d+(\.\d+)*|\([א-ת]\)|\([0-9]+\))\s+/) || 
+                           (line.length > 10 && !currentRequirement);
+
+    if (isNewRequirement) {
+      // שמירת הדרישה הקודמת אם קיימת
+      if (currentRequirement && buffer) {
+        currentRequirement.description = buffer.trim();
+        requirements.push(currentRequirement);
       }
-      const textParts = line.split(/\s+/).slice(1); // Split by one or more spaces and skip the ID part
-      const fullText = textParts.join(' ').trim();
-      currentParsedRequirement = {
-        title: fullText,
+
+      // התחלת דרישה חדשה
+      const cleanLine = line.replace(/^(\d+(\.\d+)*|\([א-ת]\)|\([0-9]+\))\s+/, '').trim();
+      currentRequirement = {
+        title: cleanLine,
         description: '',
-        category: sectionTitle.split(' ')[0], // Infer category from section title
-        priority: calculatePriorityFromContent(fullText),
-        notes: ''
+        priority: calculatePriorityFromContent(cleanLine),
+        notes: '',
+        recommendations: []
       };
-    } else if (currentParsedRequirement) {
-      if (currentParsedRequirement.description === '') {
-        currentParsedRequirement.description = line;
-        currentParsedRequirement.priority = Math.max(
-          currentParsedRequirement.priority,
-          calculatePriorityFromContent(line)
-        );
-      } else {
-        currentParsedRequirement.notes += (currentParsedRequirement.notes ? '\n' : '') + line;
-      }
+      buffer = '';
+    } else if (currentRequirement) {
+      // הוספת שורה לתיאור הדרישה הנוכחית
+      buffer += (buffer ? ' ' : '') + line;
     } else {
-      // If no active requirement and line doesn't start a new one,
-      // it's a general text. Create a new requirement for it.
-      const newRequirement = {
-        title: line.substring(0, 100) + (line.length > 100 ? '...' : ''), // Take first 100 chars as title
-        description: line,
-        category: sectionTitle.split(' ')[0], // Infer category from section title
+      // אם אין דרישה נוכחית, נתייחס לטקסט כדרישה חדשה
+      currentRequirement = {
+        title: line,
+        description: '',
         priority: calculatePriorityFromContent(line),
-        notes: ''
+        notes: '',
+        recommendations: []
       };
-      newRequirement.recommendations = generateRecommendations(newRequirement);
-      requirements.push(newRequirement);
     }
   }
-  if (currentParsedRequirement) {
-    currentParsedRequirement.recommendations = generateRecommendations(currentParsedRequirement);
-    requirements.push(currentParsedRequirement);
+
+  // שמירת הדרישה האחרונה
+  if (currentRequirement && buffer) {
+    currentRequirement.description = buffer.trim();
+    requirements.push(currentRequirement);
+  } else if (currentRequirement) {
+    requirements.push(currentRequirement);
   }
-  return requirements;
+
+  // עיבוד סופי של הדרישות
+  return requirements.map(req => {
+    // אם אין תיאור, נשתמש בכותרת
+    if (!req.description) {
+      req.description = req.title;
+    }
+
+    // הגבלת אורך כותרות ותיאורים
+    if (req.title.length > 100) {
+      req.title = req.title.substring(0, 97) + '...';
+    }
+    if (req.description.length > 1000) {
+      req.description = req.description.substring(0, 997) + '...';
+    }
+
+    // הוספת המלצות
+    req.recommendations = generateRecommendations(req);
+
+    return req;
+  });
 };
 
 const generateRecommendations = (requirement) => {
   const recommendations = [];
-  const textToAnalyze = (requirement.title + ' ' + requirement.description + ' ' + requirement.notes).toLowerCase();
+  const priority = requirement.priority;
 
-  if (requirement.priority >= 9) {
-    recommendations.push('בצע הערכת סיכונים מקיפה ופעל מיידית להפחתתם.');
-    recommendations.push('היוועץ עם מומחה משפטי/רגולטורי בהקדם.');
-  } else if (requirement.priority >= 7) {
-    recommendations.push('הגדר תוכנית פעולה מפורטת ולוחות זמנים לביצוע.');
-    recommendations.push('בצע מעקב שוטף ודיווח התקדמות.');
-  } else if (requirement.priority >= 5) {
-    recommendations.push('שלב את הדרישה בתכנית העבודה השוטפת.');
-    recommendations.push('ודא הקצאת משאבים מתאימים לביצוע.');
+  if (priority >= 9) {
+    recommendations.push('טיפול מיידי נדרש - יש לפעול ללא דיחוי');
+  } else if (priority >= 7) {
+    recommendations.push('טיפול בעדיפות גבוהה מאוד - יש לטפל בהקדם האפשרי');
+  } else if (priority >= 5) {
+    recommendations.push('טיפול בעדיפות גבוהה - יש לתכנן טיפול בקרוב');
   } else {
-    recommendations.push('סקור את הדרישה באופן תקופתי לוודא שהיא עדיין רלוונטית.');
+    recommendations.push('טיפול בעדיפות רגילה - יש לכלול בתוכנית העבודה');
   }
 
-  // Category-specific recommendations
-  if (textToAnalyze.includes('בטיחות') || textToAnalyze.includes('היגיינה') || textToAnalyze.includes('מזון')) {
-    recommendations.push('בצע הדרכות רענון בטיחות והיגיינה לצוות.');
-    recommendations.push('בדוק תקינות ציוד בטיחות ועזרה ראשונה.');
-  }
-  if (textToAnalyze.includes('רישיון') || textToAnalyze.includes('רגולציה') || textToAnalyze.includes('חוק')) {
-    recommendations.push('ודא עמידה בכל דרישות הרישוי והרגולציה הרלוונטיות.');
-    recommendations.push('עקוב אחר עדכוני חקיקה ורגולציה.');
-  }
-  if (textToAnalyze.includes('תשתיות') || textToAnalyze.includes('מבנה')) {
-    recommendations.push('בצע בדיקת תחזוקה תקופתית לתשתיות וציוד.');
-    recommendations.push('שקול שדרוג תשתיות במידת הצורך.');
-  }
-  if (textToAnalyze.includes('עובדים') || textToAnalyze.includes('צוות')) {
-    recommendations.push('הגדר נהלי עבודה ברורים וודא הטמעתם בקרב העובדים.');
-    recommendations.push('בצע סקרי שביעות רצון עובדים באופן תקופתי.');
-  }
-  if (textToAnalyze.includes('סביבה') || textToAnalyze.includes('פסולת') || textToAnalyze.includes('זיהום')) {
-    recommendations.push('בצע בקרת איכות סביבה והפחתת פסולת.');
-    recommendations.push('שקול הטמעת פתרונות ירוקים וקיימות.');
-  }
-
-  return [...new Set(recommendations)]; // Remove duplicates
+  return recommendations;
 };
 
+/**
+ * תיקון מילים חתוכות בתחילת משפט
+ */
+function fixTruncatedWords(text) {
+  // מילון תיקונים נפוצים
+  const commonFixes = {
+    'ין ': 'אין ',
+    'חד ': 'אחד ',
+    'זון ': 'מזון ',
+    'כל ': 'מאכל ',
+    'ישור ': 'אישור ',
+    'חסון ': 'אחסון ',
+    'בטחה ': 'אבטחה ',
+    'חריות ': 'אחריות ',
+    'ספקה ': 'אספקה ',
+    'רגון ': 'ארגון ',
+    'ריזה ': 'אריזה ',
+    'ינדיקטורי ': 'אינדיקטורי ',
+    'וורור ': 'אוורור ',
+    'ישות ': 'נגישות ',
+    'יקיון ': 'ניקיון ',
+    'יהול ': 'ניהול ',
+    'קירה ': 'חקירה ',
+    'דרכה ': 'הדרכה ',
+    'תקנה ': 'התקנה ',
+    'גדים ': 'בגדים ',
+    'קפאה': 'הקפאה'
+  };
+
+  // בדיקה אם המשפט מתחיל באחת המילים החתוכות
+  for (const [truncated, full] of Object.entries(commonFixes)) {
+    if (text.startsWith(truncated)) {
+      text = full + text.substring(truncated.length);
+      break;
+    }
+  }
+
+  // תיקון מילים חתוכות אחרי נקודה
+  const sentences = text.split(/\.\s+/);
+  const fixedSentences = sentences.map(sentence => {
+    for (const [truncated, full] of Object.entries(commonFixes)) {
+      if (sentence.startsWith(truncated)) {
+        return full + sentence.substring(truncated.length);
+      }
+    }
+    return sentence;
+  });
+
+  return fixedSentences.join('. ');
+}
+
+function generateTitle(text) {
+  // חילוץ כותרת מהטקסט
+  const firstSentence = text.split(/[.!?]|\n/)[0].trim();
+  
+  if (firstSentence && firstSentence.length > 5 && firstSentence.length <= 50) {
+    return firstSentence;
+  }
+  
+  // אם המשפט הראשון ארוך מדי, ניקח רק את החלק הראשון
+  return firstSentence.split(' ').slice(0, 5).join(' ');
+}
+
+function calculatePriority(text) {
+  const lowerText = text.toLowerCase();
+  
+  // מילות מפתח לדחיפות גבוהה
+  const urgentWords = ['חובה', 'אסור', 'קנס', 'סגירה', 'מיידי', 'חירום', 'סכנה'];
+  const highWords = ['רישיון', 'היתר', 'אישור', 'בטיחות', 'אש', 'בריאות'];
+  const mediumWords = ['הכשרה', 'תעודה', 'פיקוח', 'בדיקה', 'ביטוח'];
+  
+  if (urgentWords.some(word => lowerText.includes(word))) return 5;
+  if (highWords.some(word => lowerText.includes(word))) return 4;
+  if (mediumWords.some(word => lowerText.includes(word))) return 3;
+  
+  return 2;
+}
+
 module.exports = {
-  calculatePriorityFromContent,
   parseContentToRequirements,
-  generateRecommendations
+  calculatePriorityFromContent,
+  generateRecommendations,
+  calculatePriority,
+  generateTitle,
+  fixTruncatedWords
 }; 

@@ -53,7 +53,13 @@ function processRequirementsForDisplay(matchedRequirements) {
   // Ensure balanced priority distribution
   const balancedRequirements = balancePriorities(processedRequirements);
   
-  return balancedRequirements.slice(0, 30); // Limit to 30 requirements
+  // Always return between 10 and 15 requirements
+  if (balancedRequirements.length <= 15) {
+    console.log('Returning requirements count:', balancedRequirements.length);
+    return balancedRequirements;
+  }
+  console.log('Returning requirements count:', 15);
+  return balancedRequirements.slice(0, 15);
 }
 
 /**
@@ -67,9 +73,9 @@ function createShortRequirement(content, sectionTitle = '') {
   // More comprehensive cleaning of content
   let cleanContent = content
     // Remove legal references and citations
-    .replace(/התש[א-ת]\"[א-ת]\s*[-–]\s*\d{4}/g, '') // Hebrew legal years like "התשל\"ב - 1971"
-    .replace(/התש[א-ת]\"[א-ת]/g, '') // Hebrew legal notation without years
-    .replace(/\([^)]*תש[א-ת]\"[א-ת][^)]*\)/g, '') // Legal notation in parentheses
+    .replace(/התש[א-ת]"[א-ת]\s*[-–]\s*\d{4}/g, '') // Hebrew legal years like "התשל\"ב - 1971"
+    .replace(/התש[א-ת]"[א-ת]/g, '') // Hebrew legal notation without years
+    .replace(/\([^)]*תש[א-ת]"[א-ת][^)]*\)/g, '') // Legal notation in parentheses
     .replace(/תשלב\s*\d{4}/g, '') // Remove "תשלב 1971" pattern
     .replace(/שלב\s*\d{4}/g, '') // Remove "שלב 1971" pattern
     .replace(/\([^)]*\d{4}[^)]*\)/g, '') // Remove years in parentheses
@@ -81,7 +87,7 @@ function createShortRequirement(content, sectionTitle = '') {
     .replace(/נספח\s*[א-ת]['"]*/g, '') // Remove "נספח א'"
     .replace(/\(\s*[א-ת]\s*\)/g, '') // Remove "(א)" type references
     .replace(/\([^)]*\)/g, '') // Remove remaining parentheses content
-    .replace(/["\[\]]/g, '') // Remove quotes and brackets
+    .replace(/["\[\];()]/g, '') // Remove quotes, brackets, semicolons, and parentheses
     // Remove numbering and lettering
     .replace(/^\d+(\.\d+)*[\.\-\s]*/g, '') // Remove numbering
     .replace(/^[א-ת][\.\)\-\s]*/g, '') // Remove Hebrew lettering
@@ -112,6 +118,10 @@ function createShortRequirement(content, sectionTitle = '') {
   if (!requirement) {
     return null;
   }
+  
+  // Remove ; ( ) from title and description
+  requirement.title = requirement.title.replace(/[;()]/g, '');
+  requirement.description = requirement.description.replace(/[;()]/g, '');
   
   return {
     title: requirement.title,
@@ -372,14 +382,11 @@ function balancePriorities(requirements) {
   if (!requirements || requirements.length === 0) {
     return requirements;
   }
-
-  // Calculate dynamic target based on business complexity
-  const baseRequirements = Math.min(requirements.length, 8); // Start with base
-  const maxRequirements = Math.min(requirements.length, 25); // Dynamic cap based on available requirements
-  
+  // Always target between 10 and 15 requirements
+  const minRequirements = Math.min(requirements.length, 10);
+  const maxRequirements = Math.min(requirements.length, 15);
   // Sort by priority (highest first) to maintain quality
   const sortedRequirements = requirements.sort((a, b) => b.priority - a.priority);
-  
   // Take diverse priorities to ensure balance
   const balancedRequirements = [];
   const priorityGroups = {
@@ -389,7 +396,6 @@ function balancePriorities(requirements) {
     3: [], // Medium
     2: []  // Low
   };
-  
   // Group by priority
   sortedRequirements.forEach(req => {
     const priority = Math.min(Math.max(req.priority, 2), 6);
@@ -397,32 +403,27 @@ function balancePriorities(requirements) {
       priorityGroups[priority].push(req);
     }
   });
-  
   // Ensure we have some from each priority level (when available)
-  const minPerPriority = Math.floor(baseRequirements / 5);
-  const extraSlots = baseRequirements % 5;
-  
+  const minPerPriority = Math.floor(minRequirements / 5);
+  const extraSlots = minRequirements % 5;
   [6, 5, 4, 3, 2].forEach((priority, index) => {
     const group = priorityGroups[priority];
     let targetCount = minPerPriority;
     if (index < extraSlots) targetCount++; // Distribute extra slots to higher priorities
-    
     const count = Math.min(targetCount, group.length);
     for (let i = 0; i < count; i++) {
       balancedRequirements.push(group[i]);
     }
   });
-  
   // If we haven't reached the target, add more from available requirements
-  const remainingRequirements = sortedRequirements.filter(req => 
+  const remainingRequirements = sortedRequirements.filter(req =>
     !balancedRequirements.includes(req)
   );
-  
   while (balancedRequirements.length < maxRequirements && remainingRequirements.length > 0) {
     balancedRequirements.push(remainingRequirements.shift());
   }
-  
-  return balancedRequirements.slice(0, maxRequirements);
+  // Always return at most 15
+  return balancedRequirements.slice(0, 15);
 }
 
 router.post('/generate-report', async (req, res) => {

@@ -13,32 +13,45 @@ export function parseContentToRequirements(content, sectionTitle = '') {
   
   // פיצול התוכן לפסקאות קטנות
   const paragraphs = content
-    .split(/\n\s*\n|(?:\.\s*){2,}|\n\s*-\s*|\n\s*\d+\.\s*|\.\s*(?=[א-ת])/g)
-    .filter(p => p.trim() && p.trim().length > 10)
-    .map(p => p.trim())
-    .slice(0, 30); // מגביל ל-30 דרישות
+    .split(/\n\s*\n|(?:\.\s*){2,}|\n\s*-\s*|\n\s*\d+\.\s*/g)
+    .filter(p => p.trim())
+    .map(p => p.trim());
   
   paragraphs.forEach((paragraph, index) => {
     const trimmed = paragraph.trim();
-    if (!trimmed || trimmed.length < 8) return;
+    if (!trimmed) return;
     
     // ניקוי הטקסט
     let cleanText = trimmed
       .replace(/[•\-*●○▪▫]+\s*/g, '')
       .replace(/^\d+[\.\)]\s*/, '')
       .replace(/\s+/g, ' ')
-      .replace(/\([^)]*\)/g, '')
-      .replace(/["\[\]]/g, '')
       .trim();
     
-    if (!cleanText || cleanText.length < 8) return;
+    if (!cleanText) return;
     
-    // יצירת דרישה ממש קצרה
-    const { title, description } = createShortRequirement(cleanText);
+    // תיקון מילים חתוכות בתחילת משפט
+    cleanText = fixTruncatedWords(cleanText);
+    
+    // יצירת דרישה
+    const { title, description } = createRequirement(cleanText, sectionTitle);
     
     // חישוב עדיפות לפי תוכן אמיתי
     const priority = calculateRealPriority(cleanText);
     
+    // --- סינון דרישות לא הגיוניות ---
+    // דרישה לא תוצג אם הכותרת או התיאור קצרים מדי (פחות מ-8 תווים)
+    if (!title || title.length < 8) return;
+    if (!description || description.length < 30) return;
+    
+    if (title.split(' ').length < 2 && description.split(' ').length < 8) return;
+    // דרישה לא תוצג אם אין כמעט תווים עבריים (פחות מ-3)
+    const hebrewCount = (title + description).match(/[\u0590-\u05FF]/g)?.length || 0;
+    if (hebrewCount < 3) return;
+    // דרישה לא תוצג אם יש בה רק תווים מוזרים
+    if (/^[^\w\u0590-\u05FF]+$/.test(title + description)) return;
+    // --- סוף סינון ---
+
     requirements.push({
       title: title,
       description: description,
@@ -52,46 +65,109 @@ export function parseContentToRequirements(content, sectionTitle = '') {
 }
 
 /**
- * יצירת דרישה ממש קצרה
+ * תיקון מילים חתוכות בתחילת משפט
  */
-function createShortRequirement(text) {
+function fixTruncatedWords(text) {
+  // מילון תיקונים נפוצים
+  const commonFixes = {
+    'ין ': 'אין ',
+    'חד ': 'אחד ',
+    'זון ': 'מזון ',
+    'כל ': 'מאכל ',
+    'ישור ': 'אישור ',
+    'חסון ': 'אחסון ',
+    'בטחה ': 'אבטחה ',
+    'חריות ': 'אחריות ',
+    'ספקה ': 'אספקה ',
+    'רגון ': 'ארגון ',
+    'ריזה ': 'אריזה ',
+    'ינדיקטורי ': 'אינדיקטורי ',
+    'וורור ': 'אוורור ',
+    'ישות ': 'נגישות ',
+    'יקיון ': 'ניקיון ',
+    'יהול ': 'ניהול ',
+    'קירה ': 'חקירה ',
+    'דרכה ': 'הדרכה ',
+    'תקנה ': 'התקנה ',
+    'גדים ': 'בגדים ',
+    'קפאה': 'הקפאה'
+  };
+
+  // בדיקה אם המשפט מתחיל באחת המילים החתוכות
+  for (const [truncated, full] of Object.entries(commonFixes)) {
+    if (text.startsWith(truncated)) {
+      text = full + text.substring(truncated.length);
+      break;
+    }
+  }
+
+  // תיקון מילים חתוכות אחרי נקודה
+  const sentences = text.split(/\.\s+/);
+  const fixedSentences = sentences.map(sentence => {
+    for (const [truncated, full] of Object.entries(commonFixes)) {
+      if (sentence.startsWith(truncated)) {
+        return full + sentence.substring(truncated.length);
+      }
+    }
+    return sentence;
+  });
+
+  return fixedSentences.join('. ');
+}
+
+/**
+ * יצירת דרישה מלאה
+ */
+function createRequirement(text, sectionTitle = '') {
   const lowerText = text.toLowerCase();
   
   let title = '';
-  let description = '';
+  let description = text;
   
-  // זיהוי דרישות לפי מילות מפתח
-  if (lowerText.includes('רישיון') || lowerText.includes('היתר')) {
-    title = 'רישיון עסק';
-    description = 'קבל רישיון מהעירייה';
-  } else if (lowerText.includes('בטיחות') || lowerText.includes('אש')) {
-    title = 'בטיחות אש';
-    description = 'התקן גלאי עשן';
-  } else if (lowerText.includes('בריאות') || lowerText.includes('מזון')) {
-    title = 'תקני בריאות';
-    description = 'שמור ניקיון';
-  } else if (lowerText.includes('עובד') || lowerText.includes('הכשרה')) {
-    title = 'הכשרת עובדים';
-    description = 'הכשר עובדים';
-  } else if (lowerText.includes('פיקוח') || lowerText.includes('בדיקה')) {
-    title = 'בדיקות';
-    description = 'התכונן לפיקוח';
-  } else if (lowerText.includes('ביטוח')) {
-    title = 'ביטוח';
-    description = 'עשה ביטוח עסק';
-  } else if (lowerText.includes('שילוט')) {
-    title = 'שילוט';
-    description = 'התקן שילוט';
-  } else {
-    // כללי - קצר מאוד
-    const words = text.split(' ').slice(0, 3).join(' ');
-    title = words.length > 20 ? words.substring(0, 20) : words;
-    description = 'פנה לרשות';
+  // חילוץ כותרת מהטקסט
+  const firstSentence = text.split(/[.!?]|\n/)[0].trim();
+  if (firstSentence && firstSentence.length > 5) {
+    title = firstSentence;
+    description = text.substring(firstSentence.length).trim();
+    if (description.startsWith('.')) {
+      description = description.substring(1).trim();
+    }
   }
   
-  // הגבל אורכים
-  if (title.length > 25) title = title.substring(0, 25);
-  if (description.length > 35) description = description.substring(0, 35);
+  // אם אין כותרת או שהיא קצרה מדי, נשתמש בזיהוי לפי מילות מפתח
+  if (!title || title.length < 10) {
+    if (lowerText.includes('רישיון') || lowerText.includes('היתר')) {
+      title = 'רישיון עסק';
+    } else if (lowerText.includes('בטיחות') || lowerText.includes('אש')) {
+      title = 'בטיחות אש';
+    } else if (lowerText.includes('בריאות') || lowerText.includes('מזון')) {
+      title = 'תקני בריאות';
+    } else if (lowerText.includes('עובד') || lowerText.includes('הכשרה')) {
+      title = 'הכשרת עובדים';
+    } else if (lowerText.includes('פיקוח') || lowerText.includes('בדיקה')) {
+      title = 'בדיקות פיקוח';
+    } else if (lowerText.includes('ביטוח')) {
+      title = 'ביטוח';
+    } else if (lowerText.includes('שילוט')) {
+      title = 'שילוט';
+    } else {
+      // אם אין התאמה, נשתמש בחלק הראשון של הטקסט
+      title = text.split(' ').slice(0, 5).join(' ');
+    }
+  }
+  
+  // וידוא שיש תוכן בתיאור
+  if (!description || description.length < 5) {
+    description = text;
+  }
+  
+  // תיקון מילים חתוכות בכותרת ובתיאור
+  title = fixTruncatedWords(title);
+  description = fixTruncatedWords(description);
+  
+  // הגבלת אורך סבירה
+  if (title.length > 50) title = title.substring(0, 50) + '...';
+  if (description.length > 500) description = description.substring(0, 500) + '...';
   
   return { title, description };
 }
@@ -103,9 +179,9 @@ function calculateRealPriority(text) {
   const lowerText = text.toLowerCase();
   
   // מילות מפתח לדחיפות גבוהה
-  const urgentWords = ['חובה', 'אסור', 'קנס', 'סגירה', 'מיידי', 'חירום', 'סכנה'];
-  const highWords = ['רישיון', 'היתר', 'אישור', 'בטיחות', 'אש', 'בריאות'];
-  const mediumWords = ['הכשרה', 'תעודה', 'פיקוח', 'בדיקה', 'ביטוח'];
+  const urgentWords = ['חובה', 'אסור', 'קנס', 'סגירה', 'מיידי', 'חירום', 'סכנה', 'חוק', 'תקנות', 'צו'];
+  const highWords = ['רישיון', 'היתר', 'אישור', 'בטיחות', 'אש', 'בריאות', 'מזון', 'תברואה'];
+  const mediumWords = ['הכשרה', 'תעודה', 'פיקוח', 'בדיקה', 'ביטוח', 'שילוט', 'תחזוקה'];
   
   // בדיקת התאמות
   for (let word of urgentWords) {
@@ -125,19 +201,19 @@ function calculateRealPriority(text) {
 }
 
 /**
- * יצירת המלצות פשוטות
+ * יצירת המלצות מפורטות
  */
 function generateSimpleRecommendations(priority) {
   const recommendations = [];
   
   if (priority >= 6) {
-    recommendations.push('טפל מיידית!');
+    recommendations.push('טיפול מיידי נדרש - יש לפעול ללא דיחוי');
   } else if (priority >= 5) {
-    recommendations.push('טפל השבוע');
+    recommendations.push('טיפול בעדיפות גבוהה - יש לטפל בהקדם');
   } else if (priority >= 4) {
-    recommendations.push('תכנן לחודש');
+    recommendations.push('טיפול בעדיפות בינונית - יש לתכנן טיפול');
   } else {
-    recommendations.push('לא דחוף');
+    recommendations.push('טיפול בעדיפות רגילה - יש לכלול בתוכנית העבודה');
   }
   
   return recommendations;
