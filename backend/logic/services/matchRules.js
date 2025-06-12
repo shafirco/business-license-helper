@@ -1,3 +1,5 @@
+const { calculatePriorityFromContent, parseContentToRequirements, generateRecommendations } = require('../utils/requirementParser');
+
 /**
  * פונקציה שמסננת סעיפי תקנות רלוונטיים לפי התשובות של המשתמש
  * @param {Object} userAnswers - התשובות של המשתמש (פרטי העסק)
@@ -11,11 +13,29 @@ function matchRequirements(userAnswers, regulations) {
   regulations.sections.forEach(section => {
     // בודק אם הסעיף רלוונטי לפי סוג העסק ומאפיינים נוספים
     if (isSectionRelevant(section, userAnswers)) {
-      // מוסיף רק את השדות החיוניים כדי לצמצם את גודל המידע הנשלח ל-AI
+      let requirementsToProcess = [];
+
+      if (section.requirements && section.requirements.length > 0) {
+        // If explicit requirements exist, process them to add priority and recommendations
+        requirementsToProcess = section.requirements.map(req => {
+          const textToAnalyze = `${req.title || ''} ${req.description || ''} ${req.notes || ''} ${req.content || ''} ${req.text || ''}`;
+          const priority = calculatePriorityFromContent(textToAnalyze);
+          const recommendations = generateRecommendations({ ...req, priority }); // Pass req with calculated priority
+          return { ...req, priority, recommendations };
+        });
+      } else if (section.content && section.content.trim()) {
+        // If no explicit requirements but content exists, parse requirements from content
+        // parseContentToRequirements already adds priority and recommendations
+        requirementsToProcess = parseContentToRequirements(section.content, section.title);
+      }
+
+      const processedRequirements = requirementsToProcess;
+
       relevantSectionsSimplified.push({
         id: section.id,
         title: section.title,
-        requirements: section.requirements // שולחים את מערך הדרישות כפי שהוא (טקסט או אובייקטים)
+        content: section.content, // Keep original content for smart report, etc.
+        requirements: processedRequirements // Use processed requirements with calculated priority and recommendations
       });
     }
   });
@@ -25,36 +45,67 @@ function matchRequirements(userAnswers, regulations) {
 
 /**
  * בודק אם סעיף רלוונטי לפי התשובות של המשתמש
- * נשאר עם לוגיקת בדיקה פשוטה על סמך סוג העסק ומילות מפתח בכותרת/תוכן הסעיף.
  */
 function isSectionRelevant(section, userAnswers) {
   const businessType = userAnswers.businessType || '';
   const sectionTitle = section.title || '';
   const sectionContent = section.content || '';
 
-  // דוגמה לסינון פשוט: אם סוג העסק הוא מסעדה, כל הסעיפים רלוונטיים כרגע.
-  // נוכל להוסיף כאן לוגיקה מורכבת יותר בהמשך אם נצטרך.
-  if (businessType === 'restaurant') {
-    return true; // כרגע כל הסעיפים רלוונטיים למסעדה לצורך הדגמה
-  }
+  // מילות מפתח לפי סוג העסק
+  const businessTypeKeywords = {
+    'bakery': ['לחם', 'מאפיה', 'אפיה', 'בצק'],
+    'restaurant': ['מסעדה', 'אוכל', 'בישול', 'מטבח', 'הסעדה'],
+    'cafe': ['קפה', 'קפיטריה', 'משקאות'],
+    'grocery': ['מכולת', 'מרכול', 'סופר', 'מזון'],
+    'butcher': ['קצב', 'בשר', 'עוף'],
+    'dairy': ['חלב', 'גבינה', 'מוצרי חלב'],
+    'fish': ['דגים', 'פירות ים'],
+    'vegetables': ['ירקות', 'פירות', 'תוצרת טרייה']
+  };
 
-  // סינון לפי מילות מפתח בסיסיות ללא תלות במבנה ה requirements בתוך הסעיף
-  const keywords = [];
+  // מילות מפתח לפי מאפיינים
+  const featureKeywords = [];
+  if (userAnswers.hasFoodTransportation) featureKeywords.push('הובלת מזון', 'רכב');
+  if (userAnswers.hasSeating) featureKeywords.push('ישיבה', 'סועדים');
+  if (userAnswers.hasGas) featureKeywords.push('גז', 'אש');
+  if (userAnswers.hasDelivery) featureKeywords.push('משלוחים', 'שליחת מזון');
+  if (userAnswers.hasAlcohol) featureKeywords.push('אלכוהול', 'משקאות חריפים');
+  if (userAnswers.hasKitchen) featureKeywords.push('מטבח', 'בישול');
+  if (userAnswers.hasStorage) featureKeywords.push('אחסון', 'מחסן');
+  if (userAnswers.hasParking) featureKeywords.push('חניה', 'מקום חניה');
 
-  if (userAnswers.hasFoodTransportation) keywords.push('הובלת מזון', 'רכב');
-  if (userAnswers.hasSeating) keywords.push('ישיבה', 'סועדים');
-  if (userAnswers.hasGas) keywords.push('גז', 'אש');
-  if (userAnswers.hasDelivery) keywords.push('משלוחים', 'שליחת מזון');
-  // ניתן להוסיף כאן עוד מילות מפתח לפי מאפיינים נוספים
-
-  const lowerCaseTitle = sectionTitle.toLowerCase();
-  const lowerCaseContent = sectionContent.toLowerCase();
-
-  // בדיקה אם כותרת הסעיף או תוכן הסעיף מכילים מילת מפתח רלוונטית
-  return keywords.some(keyword => 
-    lowerCaseTitle.includes(keyword.toLowerCase()) || 
-    lowerCaseContent.includes(keyword.toLowerCase())
+  // בדיקת התאמה לפי סוג העסק
+  const businessKeywords = businessTypeKeywords[businessType] || [];
+  const isRelevantByBusinessType = businessKeywords.some(keyword => 
+    sectionTitle.toLowerCase().includes(keyword.toLowerCase()) || 
+    sectionContent.toLowerCase().includes(keyword.toLowerCase())
   );
+
+  // בדיקת התאמה לפי מאפיינים
+  const isRelevantByFeatures = featureKeywords.some(keyword => 
+    sectionTitle.toLowerCase().includes(keyword.toLowerCase()) || 
+    sectionContent.toLowerCase().includes(keyword.toLowerCase())
+  );
+
+  // בדיקת התאמה לפי גודל העסק
+  const isRelevantBySize = !section.minSize || !section.maxSize || 
+    (userAnswers.businessSize >= section.minSize && userAnswers.businessSize <= section.maxSize);
+
+  // בדיקת התאמה לפי דרישות ספציפיות
+  const isRelevantByRequirements = section.requirements && section.requirements.some(req => 
+    isRequirementRelevant(req, userAnswers)
+  );
+
+  // סעיף רלוונטי אם הוא מתאים לאחד מהתנאים הבאים:
+  // 1. מתאים לסוג העסק
+  // 2. מתאים למאפיינים
+  // 3. מתאים לדרישות ספציפיות
+  // 4. הוא סעיף כללי (לא מכיל מילות מפתח ספציפיות)
+  const isGeneralSection = !sectionTitle.toLowerCase().includes('ספציפי') && 
+                          !sectionContent.toLowerCase().includes('ספציפי');
+
+  return (isRelevantByBusinessType || isRelevantByFeatures || isRelevantByRequirements || isGeneralSection) && 
+         isRelevantBySize;
 }
 
 /**
@@ -106,35 +157,6 @@ function isRequirementRelevant(requirement, userAnswers) {
 
   // דרישות כלליות
   return true;
-}
-
-/**
- * מחשב את העדיפות של דרישה
- */
-function calculatePriority(requirement, userAnswers) {
-  let priority = 1;
-
-  // העלאת עדיפות לדרישות בטיחות קריטיות
-  if (requirement.isCritical) {
-    priority += 5;
-  }
-
-  // העלאת עדיפות לדרישות הקשורות לבטיחות מזון
-  if (requirement.type === 'food_handling') {
-    priority += 3;
-  }
-
-  // העלאת עדיפות לדרישות הקשורות להיגיינה
-  if (requirement.type === 'hygiene') {
-    priority += 2;
-  }
-
-  // העלאת עדיפות לדרישות הקשורות לצוות
-  if (requirement.type === 'staff') {
-    priority += 2;
-  }
-
-  return priority;
 }
 
 module.exports = {

@@ -1,0 +1,17 @@
+{
+  "name": "business-license-helper",
+  "version": "1.0.0",
+  "description": "Business license assessment system for Israeli businesses",
+  "private": true,
+  "scripts": {
+    "start": "echo 'Please choose: npm run start:frontend or npm run start:backend'",
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm start",
+    "start:dev": "cd backend && npm run dev",
+    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "build": "cd frontend && npm run build"
+  },
+  "keywords": ["business", "license", "regulatory", "israel"],
+  "author": "A-Impact",
+  "license": "MIT"
+} 

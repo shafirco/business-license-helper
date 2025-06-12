@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 import Questionnaire from './components/Questionnaire';
 import ReportView from './components/ReportView';
 import './App.css';
@@ -44,6 +44,7 @@ function App() {
       <div className="app">
         <header className="app-header">
           <h1>מערכת לסיוע בהתאמת רישוי עסק</h1>
+          <p className="subtitle">מערכת חכמה לזיהוי דרישות רגולטוריות מותאמות אישית</p>
         </header>
         <main className="app-main">
           {!report ? (
@@ -58,8 +59,11 @@ function App() {
           
           {error && (
             <div className="error-message">
-              <p>{error}</p>
-              <button onClick={() => setError(null)}>סגור</button>
+              <div className="error-content">
+                <h3>שגיאה</h3>
+                <p>{error}</p>
+                <button onClick={() => setError(null)} className="error-close-btn">סגור</button>
+              </div>
             </div>
           )}
         </main>
